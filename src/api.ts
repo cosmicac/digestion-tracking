@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DigestionEvent, EventInput } from "../shared/schema";
+import type { DigestionEvent, EventInput, SavedMeal, SavedMealInput } from "../shared/schema";
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -30,13 +30,25 @@ export const api = {
   updateEvent: (id: string, input: EventInput) =>
     request<DigestionEvent>(`/events/${id}`, { method: "PUT", body: JSON.stringify(input) }),
   deleteEvent: (id: string) => request<{ ok: true }>(`/events/${id}`, { method: "DELETE" }),
+  listSavedMeals: () => request<SavedMeal[]>("/saved-meals"),
+  createSavedMeal: (input: SavedMealInput) =>
+    request<SavedMeal>("/saved-meals", { method: "POST", body: JSON.stringify(input) }),
+  updateSavedMeal: (id: string, input: SavedMealInput) =>
+    request<SavedMeal>(`/saved-meals/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  deleteSavedMeal: (id: string) =>
+    request<{ ok: true }>(`/saved-meals/${id}`, { method: "DELETE" }),
 };
 
 export const sessionQuery = { queryKey: ["session"], queryFn: api.session, staleTime: 60_000 };
 export const eventsQuery = { queryKey: ["events"], queryFn: api.listEvents };
+export const savedMealsQuery = { queryKey: ["saved-meals"], queryFn: api.listSavedMeals };
 
 export function useEvents() {
   return useQuery(eventsQuery);
+}
+
+export function useSavedMeals() {
+  return useQuery(savedMealsQuery);
 }
 
 export function useSaveEvent(id?: string) {
@@ -63,6 +75,31 @@ export function useDeleteEvent() {
     onSuccess: (_, id) => {
       qc.setQueryData<DigestionEvent[]>(["events"], (old) => old?.filter((e) => e.id !== id));
       qc.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+export function useSaveSavedMeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id?: string; input: SavedMealInput }) =>
+      id ? api.updateSavedMeal(id, input) : api.createSavedMeal(input),
+    onSuccess: (saved) => {
+      qc.setQueryData<SavedMeal[]>(["saved-meals"], (old) =>
+        old ? [...old.filter((m) => m.id !== saved.id), saved] : old,
+      );
+      qc.invalidateQueries({ queryKey: ["saved-meals"] });
+    },
+  });
+}
+
+export function useDeleteSavedMeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteSavedMeal(id),
+    onSuccess: (_, id) => {
+      qc.setQueryData<SavedMeal[]>(["saved-meals"], (old) => old?.filter((m) => m.id !== id));
+      qc.invalidateQueries({ queryKey: ["saved-meals"] });
     },
   });
 }

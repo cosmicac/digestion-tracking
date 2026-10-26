@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState } from "react";
 import {
   BRISTOL_SCALE,
   DISCOMFORT_SUBTYPES,
@@ -8,12 +8,16 @@ import {
   type EventInput,
   type EventType,
   type MealType,
+  type SavedMeal,
 } from "../../shared/schema";
-import { useEvents, useSaveEvent } from "../api";
+import { useSaveEvent } from "../api";
 import { bristolColor, capitalize, severityColor } from "../lib/eventMeta";
+import { guessMealType, useIngredientSuggestions } from "../lib/meals";
 import { deviceTimezone } from "../lib/time";
 import { DateTimePicker } from "./DateTimePicker";
+import { SavedMealPicker } from "./SavedMealPicker";
 import { TagInput } from "./TagInput";
+import { Chip, ErrorMessage, Field, PrimaryButton } from "./ui";
 
 type Props = {
   type: EventType;
@@ -21,19 +25,11 @@ type Props = {
   onSaved: () => void;
 };
 
-function guessMealType(d = new Date()): MealType {
-  const h = d.getHours() + d.getMinutes() / 60;
-  if (h >= 5 && h < 10.5) return "breakfast";
-  if (h >= 11 && h < 14.5) return "lunch";
-  if (h >= 17 && h < 21.5) return "dinner";
-  return "snack";
-}
-
 const DURATION_PRESETS = [5, 15, 30, 60, 120, 240];
 
 export function EventForm({ type, initial, onSaved }: Props) {
   const save = useSaveEvent(initial?.id);
-  const { data: events } = useEvents();
+  const ingredientSuggestions = useIngredientSuggestions();
 
   const [occurredAt, setOccurredAt] = useState(() =>
     initial ? new Date(initial.occurredAt) : new Date(),
@@ -46,6 +42,9 @@ export function EventForm({ type, initial, onSaved }: Props) {
   );
   const [ingredients, setIngredients] = useState<string[]>(
     initial?.type === "meal" ? initial.ingredients : [],
+  );
+  const [savedMealId, setSavedMealId] = useState<string | undefined>(
+    initial?.type === "meal" ? initial.savedMealId : undefined,
   );
 
   // Bowel movement
@@ -66,14 +65,12 @@ export function EventForm({ type, initial, onSaved }: Props) {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Autocomplete suggestions: past ingredients, most frequently used first
-  const ingredientSuggestions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of events ?? []) {
-      if (e.type === "meal") for (const i of e.ingredients) counts.set(i, (counts.get(i) ?? 0) + 1);
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
-  }, [events]);
+  function applySavedMeal(m: SavedMeal) {
+    setSavedMealId(m.id);
+    setMealType(m.mealType);
+    setNotes(m.description);
+    setIngredients(m.ingredients);
+  }
 
   function buildInput(): EventInput | string {
     if (Number.isNaN(occurredAt.getTime())) return "Please set a time";
@@ -85,7 +82,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
     switch (type) {
       case "meal":
         if (!ingredients.length && !base.notes) return "Describe the meal or add some ingredients";
-        return { type, ...base, mealType, ingredients };
+        return { type, ...base, mealType, ingredients, savedMealId };
       case "bowel_movement":
         if (bristolType == null) return "Pick a stool type";
         return { type, ...base, bristolType };
@@ -120,6 +117,12 @@ export function EventForm({ type, initial, onSaved }: Props) {
 
       {type === "meal" && (
         <>
+          <SavedMealPicker
+            selectedId={savedMealId}
+            onPick={applySavedMeal}
+            current={{ mealType, description: notes, ingredients }}
+            onCreated={(m) => setSavedMealId(m.id)}
+          />
           <Field label="Meal">
             <div className="flex flex-wrap gap-2">
               {MEAL_TYPES.map((m) => (
@@ -251,28 +254,10 @@ export function EventForm({ type, initial, onSaved }: Props) {
         </>
       )}
 
-      {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      <ErrorMessage>{error}</ErrorMessage>
 
-      <button
-        type="submit"
-        disabled={save.isPending}
-        className="w-full rounded-xl bg-teal-700 py-4 text-lg font-semibold text-white shadow-sm hover:bg-teal-800 disabled:opacity-60"
-      >
-        {save.isPending ? "Saving…" : initial ? "Save changes" : "Save"}
-      </button>
+      <PrimaryButton pending={save.isPending}>{initial ? "Save changes" : "Save"}</PrimaryButton>
     </form>
-  );
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div>
-      <div className="mb-2">
-        <div className="font-medium text-stone-800">{label}</div>
-        {hint && <div className="text-xs text-stone-500">{hint}</div>}
-      </div>
-      {children}
-    </div>
   );
 }
 
@@ -287,21 +272,5 @@ function NotesField(props: { value: string; onChange: (v: string) => void; place
         className="input"
       />
     </Field>
-  );
-}
-
-function Chip(props: { selected?: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={props.onClick}
-      className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-        props.selected
-          ? "border-teal-700 bg-teal-700 text-white"
-          : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100"
-      }`}
-    >
-      {props.children}
-    </button>
   );
 }

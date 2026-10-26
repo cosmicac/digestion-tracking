@@ -11,9 +11,11 @@ import { EVENT_TYPES, type EventType } from "../shared/schema";
 import { sessionQuery } from "./api";
 import { AppLayout } from "./components/AppLayout";
 import { EditEventPage } from "./pages/EditEventPage";
+import { EditSavedMealPage } from "./pages/EditSavedMealPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewEventPage } from "./pages/NewEventPage";
+import { SavedMealsPage } from "./pages/SavedMealsPage";
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -67,9 +69,28 @@ const insightsRoute = createRoute({
   component: lazyRouteComponent(() => import("./pages/InsightsPage"), "InsightsPage"),
 });
 
+const savedMealsRoute = createRoute({
+  getParentRoute: () => authedRoute,
+  path: "/saved-meals",
+  component: SavedMealsPage,
+});
+
+const editSavedMealRoute = createRoute({
+  getParentRoute: () => authedRoute,
+  path: "/saved-meals/$savedMealId",
+  component: EditSavedMealPage,
+});
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  authedRoute.addChildren([homeRoute, newEventRoute, editEventRoute, insightsRoute]),
+  authedRoute.addChildren([
+    homeRoute,
+    newEventRoute,
+    editEventRoute,
+    insightsRoute,
+    savedMealsRoute,
+    editSavedMealRoute,
+  ]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {

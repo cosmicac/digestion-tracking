@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { EVENT_TYPES, EVENT_TYPE_LABELS, type DigestionEvent } from "../../shared/schema";
 import { useEvents } from "../api";
+import { QuickLog } from "../components/QuickLog";
 import { EVENT_STYLE, eventSubtitle, eventTitle } from "../lib/eventMeta";
 import { formatDayHeading, formatTime, localDayKey } from "../lib/time";
 
@@ -38,6 +39,8 @@ export function HomePage() {
           </Link>
         ))}
       </section>
+
+      <QuickLog />
 
       <section>
         <div className="mb-2 flex items-center justify-between">

@@ -4,7 +4,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 import { z } from "zod";
-import { eventInput } from "../shared/schema";
+import { eventInput, savedMealInput } from "../shared/schema";
 import {
   checkPassword,
   clearAttempts,
@@ -17,7 +17,17 @@ import {
   startSession,
 } from "./auth";
 import { env } from "./env";
-import { createEvent, deleteEvent, getEvent, listEvents, updateEvent } from "./sheets";
+import {
+  createEvent,
+  createSavedMeal,
+  deleteEvent,
+  deleteSavedMeal,
+  getEvent,
+  listEvents,
+  listSavedMeals,
+  updateEvent,
+  updateSavedMeal,
+} from "./sheets";
 
 const app = new Hono();
 app.use(secureHeaders());
@@ -50,8 +60,9 @@ api.post("/logout", (c) => {
   return c.json({ ok: true });
 });
 
-api.use("/events/*", requireAuth);
-api.use("/events", requireAuth);
+for (const path of ["/events", "/events/*", "/saved-meals", "/saved-meals/*"]) {
+  api.use(path, requireAuth);
+}
 
 api.get("/events", async (c) => c.json(await listEvents()));
 
@@ -75,6 +86,26 @@ api.put("/events/:id", async (c) => {
 
 api.delete("/events/:id", async (c) => {
   const ok = await deleteEvent(c.req.param("id"));
+  return ok ? c.json({ ok: true }) : c.json({ error: "Not found" }, 404);
+});
+
+api.get("/saved-meals", async (c) => c.json(await listSavedMeals()));
+
+api.post("/saved-meals", async (c) => {
+  const parsed = savedMealInput.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400);
+  return c.json(await createSavedMeal(parsed.data), 201);
+});
+
+api.put("/saved-meals/:id", async (c) => {
+  const parsed = savedMealInput.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return c.json({ error: z.prettifyError(parsed.error) }, 400);
+  const meal = await updateSavedMeal(c.req.param("id"), parsed.data);
+  return meal ? c.json(meal) : c.json({ error: "Not found" }, 404);
+});
+
+api.delete("/saved-meals/:id", async (c) => {
+  const ok = await deleteSavedMeal(c.req.param("id"));
   return ok ? c.json({ ok: true }) : c.json({ error: "Not found" }, 404);
 });
 
