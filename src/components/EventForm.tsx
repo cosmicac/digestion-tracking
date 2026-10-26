@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BRISTOL_SCALE,
   DISCOMFORT_SUBTYPES,
@@ -10,11 +10,12 @@ import {
   type MealType,
   type SavedMeal,
 } from "../../shared/schema";
-import { useSaveEvent } from "../api";
+import { useSavedMeals, useSaveEvent, useSaveSavedMeal } from "../api";
 import { bristolColor, capitalize, severityColor } from "../lib/eventMeta";
 import { guessMealType, useIngredientSuggestions } from "../lib/meals";
 import { deviceTimezone } from "../lib/time";
 import { DateTimePicker } from "./DateTimePicker";
+import { SaveAsSavedMeal, type SavedMealAction } from "./SaveAsSavedMeal";
 import { SavedMealPicker } from "./SavedMealPicker";
 import { TagInput } from "./TagInput";
 import { Chip, ErrorMessage, Field, PrimaryButton } from "./ui";
@@ -29,6 +30,8 @@ const DURATION_PRESETS = [5, 15, 30, 60, 120, 240];
 
 export function EventForm({ type, initial, onSaved }: Props) {
   const save = useSaveEvent(initial?.id);
+  const saveSavedMeal = useSaveSavedMeal();
+  const { data: savedMeals } = useSavedMeals();
   const ingredientSuggestions = useIngredientSuggestions();
 
   const [occurredAt, setOccurredAt] = useState(() =>
@@ -63,13 +66,27 @@ export function EventForm({ type, initial, onSaved }: Props) {
     initial?.type === "discomfort" ? String(initial.durationMin) : "",
   );
 
+  const [savedMealAction, setSavedMealAction] = useState<SavedMealAction>({ kind: "none" });
+
   const [error, setError] = useState<string | null>(null);
+
+  // The saved meal this meal is based on (ignored if it has since been deleted)
+  const baseMeal = savedMeals?.find((m) => m.id === savedMealId);
+  const changedFromBase = useMemo(
+    () =>
+      !!baseMeal &&
+      (baseMeal.mealType !== mealType ||
+        baseMeal.description.trim() !== notes.trim() ||
+        baseMeal.ingredients.join("|") !== ingredients.join("|")),
+    [baseMeal, mealType, notes, ingredients],
+  );
 
   function applySavedMeal(m: SavedMeal) {
     setSavedMealId(m.id);
     setMealType(m.mealType);
     setNotes(m.description);
     setIngredients(m.ingredients);
+    setSavedMealAction({ kind: "none" });
   }
 
   function buildInput(): EventInput | string {
@@ -82,7 +99,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
     switch (type) {
       case "meal":
         if (!ingredients.length && !base.notes) return "Describe the meal or add some ingredients";
-        return { type, ...base, mealType, ingredients, savedMealId };
+        return { type, ...base, mealType, ingredients, savedMealId: baseMeal?.id };
       case "bowel_movement":
         if (bristolType == null) return "Pick a stool type";
         return { type, ...base, bristolType };
@@ -102,6 +119,20 @@ export function EventForm({ type, initial, onSaved }: Props) {
     const input = buildInput();
     if (typeof input === "string") return setError(input);
     try {
+      if (input.type === "meal") {
+        const meal = { mealType: input.mealType, description: input.notes, ingredients: input.ingredients };
+        if (savedMealAction.kind === "create") {
+          const name = savedMealAction.name.trim();
+          if (!name) return setError("Give the saved meal a name");
+          const created = await saveSavedMeal.mutateAsync({ input: { ...meal, name } });
+          input.savedMealId = created.id;
+          setSavedMealId(created.id);
+          setSavedMealAction({ kind: "none" }); // don't create it twice if the event save fails
+        } else if (savedMealAction.kind === "update" && changedFromBase) {
+          const { id, name } = savedMealAction.meal;
+          await saveSavedMeal.mutateAsync({ id, input: { ...meal, name } });
+        }
+      }
       await save.mutateAsync(input);
       onSaved();
     } catch (err) {
@@ -111,18 +142,14 @@ export function EventForm({ type, initial, onSaved }: Props) {
 
   return (
     <form onSubmit={submit} className="space-y-6">
+      {type === "meal" && <SavedMealPicker selectedId={baseMeal?.id} onPick={applySavedMeal} />}
+
       <Field label="When">
         <DateTimePicker value={occurredAt} onChange={setOccurredAt} />
       </Field>
 
       {type === "meal" && (
         <>
-          <SavedMealPicker
-            selectedId={savedMealId}
-            onPick={applySavedMeal}
-            current={{ mealType, description: notes, ingredients }}
-            onCreated={(m) => setSavedMealId(m.id)}
-          />
           <Field label="Meal">
             <div className="flex flex-wrap gap-2">
               {MEAL_TYPES.map((m) => (
@@ -254,9 +281,19 @@ export function EventForm({ type, initial, onSaved }: Props) {
         </>
       )}
 
+      {type === "meal" && (
+        <SaveAsSavedMeal
+          baseMeal={baseMeal}
+          changed={changedFromBase}
+          action={savedMealAction}
+          onChange={setSavedMealAction}
+          defaultName={mealType === "other" ? "" : `Usual ${mealType}`}
+        />
+      )}
+
       <ErrorMessage>{error}</ErrorMessage>
 
-      <PrimaryButton pending={save.isPending}>{initial ? "Save changes" : "Save"}</PrimaryButton>
+      <PrimaryButton pending={save.isPending || saveSavedMeal.isPending}>{initial ? "Save changes" : "Save"}</PrimaryButton>
     </form>
   );
 }

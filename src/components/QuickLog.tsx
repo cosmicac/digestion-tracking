@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { DigestionEvent, SavedMeal } from "../../shared/schema";
-import { useDeleteEvent, useSaveEvent } from "../api";
+import { useDeleteEvent, useSavedMeals, useSaveEvent } from "../api";
 import { useSortedSavedMeals } from "../lib/meals";
 import { deviceTimezone } from "../lib/time";
 
@@ -11,6 +11,7 @@ const TOAST_MS = 6000;
 /** One-tap logging of saved meals at the current time, with undo. */
 export function QuickLog() {
   const meals = useSortedSavedMeals();
+  const { isPending: loading } = useSavedMeals();
   const save = useSaveEvent();
   const del = useDeleteEvent();
   const [toast, setToast] = useState<
@@ -54,13 +55,35 @@ export function QuickLog() {
     }
   }
 
-  if (!meals.length) return null;
+  if (loading) return null;
+  if (!meals.length) {
+    return (
+      <Link
+        to="/saved-meals"
+        className="flex items-center gap-3 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 p-3 hover:bg-amber-50"
+      >
+        <span className="text-xl">⭐</span>
+        <span className="flex-1 text-sm">
+          <span className="font-medium text-amber-900">Saved meals</span>
+          <span className="block text-xs text-stone-600">
+            Save meals you eat often to log them with one tap.
+          </span>
+        </span>
+        <span className="text-stone-400">›</span>
+      </Link>
+    );
+  }
 
   return (
     <section>
-      <h2 className="mb-2 text-sm font-semibold tracking-wide text-stone-500 uppercase">
-        Quick log
-      </h2>
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-sm font-semibold tracking-wide text-stone-500 uppercase">
+          ⭐ Quick log
+        </h2>
+        <Link to="/saved-meals" className="text-sm font-medium text-teal-700">
+          Manage saved meals
+        </Link>
+      </div>
       <div className="flex flex-wrap gap-2">
         {meals.slice(0, MAX_SHOWN).map((m) => (
           <button
@@ -69,7 +92,6 @@ export function QuickLog() {
             disabled={save.isPending}
             className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 shadow-sm active:scale-95 disabled:opacity-60"
           >
-            <span>⭐</span>
             {m.name}
           </button>
         ))}
