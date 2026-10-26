@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@utility input {
+  @apply block w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 outline-none placeholder:text-stone-400 focus:border-teal-600 focus:ring-1 focus:ring-teal-600;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent iOS zoom on focus by keeping inputs >= 16px */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
