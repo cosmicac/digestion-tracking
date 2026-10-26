@@ -1,5 +1,7 @@
 import { useId, useMemo, useState } from "react";
 
+const FREQUENT_COUNT = 10;
+
 type Props = {
   value: string[];
   onChange: (tags: string[]) => void;
@@ -22,6 +24,12 @@ export function TagInput({ value, onChange, suggestions, placeholder }: Props) {
       .filter((s) => s.toLowerCase().includes(q) && !lowerValue.has(s.toLowerCase()))
       .slice(0, 8);
   }, [text, suggestions, lowerValue]);
+
+  // Most-used ingredients not already added, shown as one-tap chips
+  const frequent = useMemo(
+    () => suggestions.filter((s) => !lowerValue.has(s.toLowerCase())).slice(0, FREQUENT_COUNT),
+    [suggestions, lowerValue],
+  );
 
   function add(raw: string) {
     const tags = raw
@@ -104,6 +112,24 @@ export function TagInput({ value, onChange, suggestions, placeholder }: Props) {
         </ul>
       )}
       <p className="mt-1 text-xs text-stone-500">Press Enter or comma to add.</p>
+      {frequent.length > 0 && !text.trim() && (
+        <div className="mt-2">
+          <div className="mb-1.5 text-xs font-medium text-stone-500">Frequently used</div>
+          <div className="flex flex-wrap gap-1.5">
+            {frequent.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => add(s)}
+                className="rounded-full border border-stone-300 bg-white px-3 py-1 text-sm text-stone-700 hover:bg-stone-100 active:bg-stone-200"
+              >
+                + {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
