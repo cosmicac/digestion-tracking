@@ -116,7 +116,7 @@ export function InsightsPage() {
           sub={data.normalPct != null ? `${Math.round(data.normalPct)}% type 3–4` : undefined}
         />
         <Stat
-          label="Discomfort episodes"
+          label="Discomfort"
           value={`${data.discomforts.length}`}
           sub={formatDuration(data.discomforts.reduce((s, e) => s + e.durationMin, 0)) + " total"}
         />
@@ -127,7 +127,7 @@ export function InsightsPage() {
         />
       </div>
 
-      <Card title="Stool type over time" hint="Green band = normal (types 3–4)">
+      <Card title="Stool type over time" hint="Green = normal (3–4)">
         {data.stoolPoints.length === 0 ? (
           <Empty />
         ) : (
@@ -158,7 +158,7 @@ export function InsightsPage() {
         )}
       </Card>
 
-      <Card title="Worst discomfort per day" hint="Highest severity logged each day">
+      <Card title="Worst discomfort per day">
         {data.discomforts.length === 0 ? (
           <Empty />
         ) : (
@@ -184,7 +184,7 @@ export function InsightsPage() {
         )}
       </Card>
 
-      <Card title="Most logged ingredients" hint={`${data.meals.length} meals logged`}>
+      <Card title="Top ingredients" hint={`${data.meals.length} meals`}>
         {data.topIngredients.length === 0 ? (
           <Empty />
         ) : (
@@ -229,5 +229,5 @@ function Card({ title, hint, children }: { title: string; hint?: string; childre
 }
 
 function Empty() {
-  return <p className="py-6 text-center text-sm text-stone-400">No data in this range yet</p>;
+  return <p className="py-6 text-center text-sm text-stone-400">No data yet</p>;
 }

@@ -90,7 +90,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
   }
 
   function buildInput(): EventInput | string {
-    if (Number.isNaN(occurredAt.getTime())) return "Please set a time";
+    if (Number.isNaN(occurredAt.getTime())) return "Set a time";
     const base = {
       occurredAt: occurredAt.toISOString(),
       timezone: initial?.timezone ?? deviceTimezone(),
@@ -98,16 +98,16 @@ export function EventForm({ type, initial, onSaved }: Props) {
     };
     switch (type) {
       case "meal":
-        if (!ingredients.length && !base.notes) return "Describe the meal or add some ingredients";
+        if (!ingredients.length && !base.notes) return "Add a description or ingredients";
         return { type, ...base, mealType, ingredients, savedMealId: baseMeal?.id };
       case "bowel_movement":
         if (bristolType == null) return "Pick a stool type";
         return { type, ...base, bristolType };
       case "discomfort": {
-        if (!subtypes.length) return "Pick at least one type of discomfort";
+        if (!subtypes.length) return "Pick a type";
         if (severity == null) return "Pick a severity";
         const d = Number(durationMin);
-        if (durationMin === "" || !Number.isFinite(d) || d < 0) return "Enter a duration in minutes";
+        if (durationMin === "" || !Number.isFinite(d) || d < 0) return "Add a duration";
         return { type, ...base, subtypes, severity, durationMin: Math.round(d) };
       }
     }
@@ -123,7 +123,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
         const meal = { mealType: input.mealType, description: input.notes, ingredients: input.ingredients };
         if (savedMealAction.kind === "create") {
           const name = savedMealAction.name.trim();
-          if (!name) return setError("Give the saved meal a name");
+          if (!name) return setError("Name the saved meal");
           const created = await saveSavedMeal.mutateAsync({ input: { ...meal, name } });
           input.savedMealId = created.id;
           setSavedMealId(created.id);
@@ -136,7 +136,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
       await save.mutateAsync(input);
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : "Couldn't save");
     }
   }
 
@@ -159,16 +159,16 @@ export function EventForm({ type, initial, onSaved }: Props) {
               ))}
             </div>
           </Field>
-          <Field label="What did you eat?" hint="Describe it however you like">
+          <Field label="What did you eat?">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="e.g. Chicken burrito bowl with rice, beans, salsa"
+              placeholder="e.g. Chicken burrito bowl"
               className="input"
             />
           </Field>
-          <Field label="Ingredients" hint="Optional – helps spot patterns later">
+          <Field label="Ingredients" hint="Optional">
             <TagInput
               value={ingredients}
               onChange={setIngredients}
@@ -181,7 +181,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
 
       {type === "bowel_movement" && (
         <>
-          <Field label="Stool type (Bristol scale)">
+          <Field label="Stool type">
             <div className="space-y-2">
               {Object.entries(BRISTOL_SCALE).map(([k, v]) => {
                 const n = Number(k);
@@ -209,13 +209,13 @@ export function EventForm({ type, initial, onSaved }: Props) {
               })}
             </div>
           </Field>
-          <NotesField value={notes} onChange={setNotes} placeholder="Color, urgency, straining…" />
+          <NotesField value={notes} onChange={setNotes} placeholder="Color, urgency…" />
         </>
       )}
 
       {type === "discomfort" && (
         <>
-          <Field label="Type" hint="Select all that apply">
+          <Field label="Type" hint="Pick all that apply">
             <div className="flex flex-wrap gap-2">
               {DISCOMFORT_SUBTYPES.map((s) => (
                 <Chip
@@ -232,7 +232,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
               ))}
             </div>
           </Field>
-          <Field label="Severity" hint="1 = barely noticeable, 10 = worst imaginable">
+          <Field label="Severity" hint="1 = mild, 10 = worst">
             <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                 <button
@@ -251,7 +251,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
               ))}
             </div>
           </Field>
-          <Field label="Duration (minutes)">
+          <Field label="Duration">
             <input
               type="number"
               inputMode="numeric"
@@ -259,7 +259,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
               value={durationMin}
               onChange={(e) => setDurationMin(e.target.value)}
               className="input"
-              placeholder="e.g. 30"
+              placeholder="Minutes"
             />
             <div className="mt-2 flex flex-wrap gap-2">
               {DURATION_PRESETS.map((d) => (
@@ -276,7 +276,7 @@ export function EventForm({ type, initial, onSaved }: Props) {
           <NotesField
             value={notes}
             onChange={setNotes}
-            placeholder="Where was it? What did it feel like?"
+            placeholder="Where, what it felt like…"
           />
         </>
       )}

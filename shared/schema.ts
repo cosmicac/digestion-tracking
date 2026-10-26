@@ -24,13 +24,13 @@ export const DISCOMFORT_SUBTYPES = [
 export type DiscomfortSubtype = (typeof DISCOMFORT_SUBTYPES)[number];
 
 export const BRISTOL_SCALE: Record<number, { label: string; description: string }> = {
-  1: { label: "Type 1", description: "Separate hard lumps (severe constipation)" },
-  2: { label: "Type 2", description: "Lumpy and sausage-like (mild constipation)" },
-  3: { label: "Type 3", description: "Sausage with cracks on surface (normal)" },
-  4: { label: "Type 4", description: "Smooth, soft sausage or snake (ideal)" },
-  5: { label: "Type 5", description: "Soft blobs with clear-cut edges (lacking fiber)" },
-  6: { label: "Type 6", description: "Mushy, fluffy pieces with ragged edges (mild diarrhea)" },
-  7: { label: "Type 7", description: "Watery, no solid pieces (severe diarrhea)" },
+  1: { label: "Type 1", description: "Hard lumps" },
+  2: { label: "Type 2", description: "Lumpy sausage" },
+  3: { label: "Type 3", description: "Sausage with cracks" },
+  4: { label: "Type 4", description: "Smooth, soft sausage" },
+  5: { label: "Type 5", description: "Soft blobs" },
+  6: { label: "Type 6", description: "Mushy" },
+  7: { label: "Type 7", description: "Watery" },
 };
 
 const base = {
@@ -64,7 +64,7 @@ export const bowelMovementInput = z.object({
 export const discomfortInput = z.object({
   type: z.literal("discomfort"),
   ...base,
-  subtypes: z.array(z.enum(DISCOMFORT_SUBTYPES)).min(1, "Pick at least one type"),
+  subtypes: z.array(z.enum(DISCOMFORT_SUBTYPES)).min(1, "Pick a type"),
   severity: z.number().int().min(1).max(10),
   durationMin: z.number().int().min(0).max(60 * 24 * 7),
 });

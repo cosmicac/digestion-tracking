@@ -111,10 +111,9 @@ export function TagInput({ value, onChange, suggestions, placeholder }: Props) {
           ))}
         </ul>
       )}
-      <p className="mt-1 text-xs text-stone-500">Press Enter or comma to add.</p>
       {frequent.length > 0 && !text.trim() && (
         <div className="mt-2">
-          <div className="mb-1.5 text-xs font-medium text-stone-500">Frequently used</div>
+          <div className="mb-1.5 text-xs font-medium text-stone-500">Frequent</div>
           <div className="flex flex-wrap gap-1.5">
             {frequent.map((s) => (
               <button

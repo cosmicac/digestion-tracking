@@ -19,7 +19,7 @@ export function EditSavedMealPage() {
   if (!isNew && !meal) {
     return (
       <div className="py-8 text-center text-stone-500">
-        Saved meal not found.{" "}
+        Not found.{" "}
         <Link to="/saved-meals" className="text-teal-700 underline">
           Back
         </Link>
@@ -49,23 +49,23 @@ function SavedMealForm({ initial }: { initial?: SavedMeal }) {
     const parsed = savedMealInput.safeParse({ name, mealType, description, ingredients });
     if (!parsed.success) return setError(parsed.error.issues[0]?.message ?? "Invalid");
     if (!parsed.data.description && !parsed.data.ingredients.length) {
-      return setError("Add a description or some ingredients");
+      return setError("Add a description or ingredients");
     }
     try {
       await save.mutateAsync({ id: initial?.id, input: parsed.data });
       back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+      setError(err instanceof Error ? err.message : "Couldn't save");
     }
   }
 
   async function onDelete() {
-    if (!initial || !confirm(`Delete "${initial.name}"? Meals already logged are kept.`)) return;
+    if (!initial || !confirm(`Delete “${initial.name}”?`)) return;
     try {
       await del.mutateAsync(initial.id);
       back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete");
+      setError(err instanceof Error ? err.message : "Couldn't delete");
     }
   }
 
@@ -97,7 +97,7 @@ function SavedMealForm({ initial }: { initial?: SavedMeal }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            placeholder="e.g. Oatmeal with banana, almond milk and honey"
+            placeholder="e.g. Oatmeal with banana"
             className="input"
           />
         </Field>
@@ -106,7 +106,7 @@ function SavedMealForm({ initial }: { initial?: SavedMeal }) {
             value={ingredients}
             onChange={setIngredients}
             suggestions={suggestions}
-            placeholder="e.g. oats, banana, almond milk"
+            placeholder="e.g. oats, banana"
           />
         </Field>
 
@@ -120,7 +120,7 @@ function SavedMealForm({ initial }: { initial?: SavedMeal }) {
           disabled={del.isPending}
           className="mt-4 w-full rounded-xl border border-red-200 py-3 font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
         >
-          {del.isPending ? "Deleting…" : "Delete saved meal"}
+          {del.isPending ? "Deleting…" : "Delete"}
         </button>
       )}
     </div>

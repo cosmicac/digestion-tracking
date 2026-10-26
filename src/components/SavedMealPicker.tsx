@@ -15,7 +15,7 @@ export function SavedMealPicker({ selectedId, onPick }: Props) {
 
   return (
     <div>
-      <div className="mb-2 text-sm font-medium text-stone-600">⭐ Start from a saved meal</div>
+      <div className="mb-2 text-sm font-medium text-stone-600">⭐ Saved meals</div>
       <div className="flex flex-wrap gap-2">
         {meals.map((m) => (
           <Chip key={m.id} selected={selectedId === m.id} onClick={() => onPick(m)}>

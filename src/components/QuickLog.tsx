@@ -40,7 +40,7 @@ export function QuickLog() {
       });
       show({ kind: "logged", event, name: m.name });
     } catch (err) {
-      show({ kind: "message", text: err instanceof Error ? err.message : "Failed to log" });
+      show({ kind: "message", text: err instanceof Error ? err.message : "Couldn't log" });
     }
   }
 
@@ -51,7 +51,7 @@ export function QuickLog() {
       await del.mutateAsync(event.id);
       show({ kind: "message", text: "Removed" });
     } catch {
-      show({ kind: "message", text: "Couldn't undo. Delete it from the timeline instead." });
+      show({ kind: "message", text: "Couldn't undo" });
     }
   }
 
@@ -66,7 +66,7 @@ export function QuickLog() {
         <span className="flex-1 text-sm">
           <span className="font-medium text-amber-900">Saved meals</span>
           <span className="block text-xs text-stone-600">
-            Save meals you eat often to log them with one tap.
+            Log regular meals in one tap
           </span>
         </span>
         <span className="text-stone-400">›</span>
@@ -81,7 +81,7 @@ export function QuickLog() {
           ⭐ Quick log
         </h2>
         <Link to="/saved-meals" className="text-sm font-medium text-teal-700">
-          Manage saved meals
+          Manage
         </Link>
       </div>
       <div className="flex flex-wrap gap-2">

@@ -17,18 +17,18 @@ export function EditEventPage() {
   if (!event) {
     return (
       <div className="py-8 text-center text-stone-500">
-        Event not found. <Link to="/" className="text-teal-700 underline">Back to timeline</Link>
+        Not found. <Link to="/" className="text-teal-700 underline">Back</Link>
       </div>
     );
   }
 
   async function onDelete() {
-    if (!confirm("Delete this entry? This can't be undone.")) return;
+    if (!confirm("Delete this entry?")) return;
     try {
       await del.mutateAsync(eventId);
       navigate({ to: "/" });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete");
+      alert(err instanceof Error ? err.message : "Couldn't delete");
     }
   }
 
@@ -48,7 +48,7 @@ export function EditEventPage() {
         disabled={del.isPending}
         className="mt-4 w-full rounded-xl border border-red-200 py-3 font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
       >
-        {del.isPending ? "Deleting…" : "Delete entry"}
+        {del.isPending ? "Deleting…" : "Delete"}
       </button>
     </div>
   );

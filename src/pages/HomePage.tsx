@@ -60,7 +60,7 @@ export function HomePage() {
         )}
         {events && events.length === 0 && (
           <p className="py-8 text-center text-stone-500">
-            Nothing logged yet. Tap a button above to get started.
+            Nothing logged yet
           </p>
         )}
 

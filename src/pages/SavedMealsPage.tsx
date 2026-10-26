@@ -17,15 +17,11 @@ export function SavedMealsPage() {
           + New
         </Link>
       </div>
-      <p className="text-sm text-stone-500">
-        Meals you eat often. Log them with one tap from the home screen or the meal form.
-        Editing a saved meal doesn't change meals already logged.
-      </p>
 
       {isLoading && <p className="py-8 text-center text-stone-500">Loading…</p>}
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error.message}</p>}
       {meals?.length === 0 && (
-        <p className="py-8 text-center text-stone-500">No saved meals yet.</p>
+        <p className="py-8 text-center text-stone-500">No saved meals yet</p>
       )}
 
       <ul className="space-y-2">

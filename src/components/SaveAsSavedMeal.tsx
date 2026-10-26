@@ -37,12 +37,7 @@ export function SaveAsSavedMeal({ baseMeal, changed, action, onChange, defaultNa
           className="mt-0.5 h-5 w-5 accent-teal-700"
         />
         <span className="text-sm">
-          <span className="font-medium text-stone-800">
-            Update “{baseMeal.name}” with these changes
-          </span>
-          <span className="block text-xs text-stone-500">
-            Leave unchecked if this was a one-off change.
-          </span>
+          <span className="font-medium text-stone-800">Also update “{baseMeal.name}”</span>
         </span>
       </label>
     );
@@ -61,17 +56,14 @@ export function SaveAsSavedMeal({ baseMeal, changed, action, onChange, defaultNa
           className="mt-0.5 h-5 w-5 accent-teal-700"
         />
         <span className="text-sm">
-          <span className="font-medium text-stone-800">⭐ Also save as a saved meal</span>
-          <span className="block text-xs text-stone-500">
-            Eat this often? Reuse it with one tap next time.
-          </span>
+          <span className="font-medium text-stone-800">⭐ Save as a saved meal</span>
         </span>
       </label>
       {action.kind === "create" && (
         <input
           value={action.name}
           onChange={(e) => onChange({ kind: "create", name: e.target.value })}
-          placeholder="Name, e.g. Usual breakfast"
+          placeholder="Name"
           className="input mt-3"
           aria-label="Saved meal name"
         />

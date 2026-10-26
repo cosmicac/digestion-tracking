@@ -42,7 +42,7 @@ api.get("/session", async (c) => c.json({ authenticated: await isAuthenticated(c
 api.post("/login", async (c) => {
   const ip = clientIp(c);
   if (rateLimited(ip)) {
-    return c.json({ error: "Too many attempts. Try again in a few minutes." }, 429);
+    return c.json({ error: "Too many tries. Wait a few minutes." }, 429);
   }
   const body = await c.req.json().catch(() => ({}));
   const parsed = z.object({ password: z.string() }).safeParse(body);
@@ -111,7 +111,7 @@ api.delete("/saved-meals/:id", async (c) => {
 
 api.onError((err, c) => {
   console.error(err);
-  return c.json({ error: "Something went wrong talking to Google Sheets" }, 500);
+  return c.json({ error: "Couldn't reach Google Sheets" }, 500);
 });
 
 app.route("/api", api);
